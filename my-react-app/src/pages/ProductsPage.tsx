@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import RatingStars from '../components/RatingStars'
 import Loader from '../components/Loader'
 import Header from '../components/Header'
@@ -17,15 +17,26 @@ interface Product {
 const ProductsPage = () => {
     const [products, setProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(true)
+    const navigate = useNavigate()
 
     useEffect(() => {
-        fetch('https://fakestoreapi.com/products')
-            .then(res => res.json())
-            .then(data => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch(
+                    'https://fakestoreapi.com/products',
+                )
+                if (!response.ok) throw new Error('Ошибка загрузки')
+                const data = await response.json()
                 setProducts(data)
+            } catch (error) {
+                console.error('Ошибка:', error)
+                navigate('/error')
+            } finally {
                 setLoading(false)
-            })
-    }, [])
+            }
+        }
+        fetchData()
+    }, [navigate])
 
     if (loading) return <Loader />
 
@@ -34,9 +45,9 @@ const ProductsPage = () => {
             <Header />
             <div className="products-grid">
                 {products.map(product => (
-                    <Link 
-                        key={product.id} 
-                        to={`/product/${product.id}`} 
+                    <Link
+                        key={product.id}
+                        to={`/product/${product.id}`}
                         className="product-card"
                     >
                         <img src={product.image} alt={product.title} />
